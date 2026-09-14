@@ -1,0 +1,104 @@
+Design Document: Supply & Demand Market MVP
+
+1. Goal & Concept
+A console-based, agent-based economic simulation demonstrating price discovery and market equilibrium.
+
+* Goods: Single commodity (Rockets).
+* Agents: Buyers and Sellers with private valuations and dynamically updating price expectations.
+* Mechanism: Random Search with Price Sampling & Midpoint Bargaining.
+
+2. Configuration (config.json)
+External setup parameters to control market scales and constraints:
+
+* num_sellers: 10
+* num_buyers: 10
+* seller_min_range: [20, 40]
+* buyer_max_range: [50, 80]
+* sample_size: 5
+* daily_yield: 1
+* price_step: 2.0
+* simulation_days: 300
+
+3. Data Entities & State
+
+Seller:
+
+* id: Unique identifier.
+* min_price (MIN): Private cost threshold / minimum acceptable selling price.
+* expected_price: Current asking price. Initializes to MIN.
+* inventory: Current stock available to sell.
+* active: Boolean. Set to False if expected_price < min_price.
+
+Buyer:
+
+* id: Unique identifier.
+* max_price (MAX): Private valuation / maximum budget limit.
+* expected_price: Current target buying price. Initializes to MAX.
+* inventory: Total rockets acquired.
+
+4. Market Mechanics & Rules
+
+A. Sales rule:
+Simulation assumes "storefront" model, an transaction happens at the sellers expected price given its lower than buyer's expected price
+
+
+
+B. Surplus Calculation:
+
+* Producer Surplus = Transaction Price - MIN
+* Consumer Surplus = MAX - Transaction Price
+* Total Trade Surplus = MAX - MIN
+
+C. Price Expectation Updates (End of Day):
+
+* Successful Trade:
+* Seller: Increases expected_price by price_step (perceives high demand).
+* Buyer: Decreases expected_price by price_step (perceives lower costs).
+
+
+* Unsuccessful Trade / No Sale:
+* Seller: Decreases expected_price by price_step (tries to attract buyers).
+* Buyer: Increases expected_price by price_step (realizes market is expensive).
+
+
+
+5. Daily Simulation Loop (Tick)
+
+FOR day = 1 TO simulation_days:
+1. RESET / YIELD INVENTORY:
+- Restore Seller inventory to daily_yield.
+
+```
+2. SHUFFLE BUYERS:
+   - Randomize order of buyers to prevent bias.
+
+3. MATCHING PHASE:
+   FOR each buyer IN buyers:
+       - Filter active sellers with inventory > 0.
+       - Sample up to sample_size random sellers.
+       - FOR each sampled seller:
+           - IF seller.expected_price <= buyer.max_price AND buyer.expected_price >= seller.min_price:
+               * Execute Trade at (MIN + MAX) / 2
+               * Update inventories
+               * Record trade statistics
+               * BREAK loop (Buyer exits market for the day)
+
+4. EXPECTATION ADJUSTMENT:
+   - Update expected_price for all agents based on trade outcomes.
+   - Deactivate sellers whose expected_price drops below MIN.
+
+5. LOGGING:
+   - Output daily summary to Console / Aggregator.
+
+```
+
+6. Real-Time Metrics & Console Output
+
+At the end of each day tick, the simulator outputs:
+
+--- Day 042 Summary ---
+Completed Trades:   7
+Average Price:      $30.00
+Producer Surplus:   $70.00
+Consumer Surplus:   $70.00
+Active Sellers:     9/10

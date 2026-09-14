@@ -1,0 +1,21 @@
+# Python cache & temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+
+# Data & Output dumps (v0.2.0 logs)
+*.csv
+*.png
+logs/
+exports/
